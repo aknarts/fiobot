@@ -9,7 +9,7 @@ CREATE TABLE rules
             REFERENCES accounts,
     amount         REAL    NOT NULL,
     percent        INTEGER NOT NULL,
-    target_account INTEGER NOT NULL,
+    target_account TEXT NOT NULL,
     target_bank    INTEGER,
     bic            TEXT,
     ks             INTEGER,

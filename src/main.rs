@@ -1,12 +1,15 @@
 mod account;
+mod bot;
+mod rules;
 mod schema;
 
-use clap::{Arg, Command};
+use clap::Command;
 use diesel::{Connection, SqliteConnection};
 use tracing::{error, info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let subscriber = FmtSubscriber::builder()
         .with_max_level(Level::TRACE)
         .finish();
@@ -15,11 +18,14 @@ fn main() {
     let m = Command::new("bot")
         .about("Bot to manage events on the fio API")
         .subcommands([
-            Command::new("account").subcommands(account::subcommands::generate_subcommands())
+            Command::new("account").subcommands(account::subcommands::generate_subcommands()),
+            Command::new("rule").subcommands(rules::subcommands::generate_subcommands()),
         ])
         .get_matches();
     match m.subcommand() {
-        None => {}
+        None => {
+            bot::check_accounts().await;
+        }
         Some(command) => match command.0 {
             "account" => match command.1.subcommand() {
                 None => {
@@ -44,6 +50,64 @@ fn main() {
                         "list" => {
                             let show_tokens = subcommand.1.get_flag("show_tokens");
                             account::list(show_tokens);
+                        }
+                        _ => {}
+                    };
+                }
+            },
+            "rule" => match command.1.subcommand() {
+                None => {
+                    error!("You must specify a subcommand");
+                    info!("add: Add a rule to the bot");
+                    info!("remove: Remove a rule from the bot");
+                    info!("list: List all rules");
+                }
+                Some(subcommand) => {
+                    match subcommand.0 {
+                        "add" => {
+                            let target_account =
+                                subcommand.1.get_one::<String>("target_account").unwrap();
+                            let account = subcommand.1.get_one::<i32>("account").unwrap();
+                            let amount = subcommand.1.get_one::<i32>("amount").unwrap();
+                            let target_bank = subcommand.1.get_one::<str>("target_bank");
+                            let bic = subcommand.1.get_one::<str>("bic");
+                            let ks = subcommand.1.get_one::<i32>("ks");
+                            let vs = subcommand.1.get_one::<i32>("vs");
+                            let ss = subcommand.1.get_one::<i32>("ss");
+                            let message = subcommand.1.get_one::<str>("message");
+                            let comment = subcommand.1.get_one::<str>("comment");
+                            let for_ = subcommand.1.get_one::<str>("for");
+                            let payment_type = subcommand
+                                .1
+                                .get_one::<i32>("payment_type")
+                                .unwrap_or(&431001);
+                            let active = subcommand.1.get_flag("active");
+                            let percent = subcommand.1.get_flag("percent");
+                            let sequence = subcommand.1.get_one::<i32>("sequence");
+                            rules::add(
+                                account,
+                                amount,
+                                target_account,
+                                target_bank,
+                                bic,
+                                ks,
+                                vs,
+                                ss,
+                                message,
+                                comment,
+                                for_,
+                                payment_type,
+                                active,
+                                percent,
+                                sequence,
+                            );
+                        }
+                        "remove" => {
+                            let name = subcommand.1.get_one::<String>("name").unwrap();
+                            // rules::remove(&name);
+                        }
+                        "list" => {
+                            // rules::list();
                         }
                         _ => {}
                     };
