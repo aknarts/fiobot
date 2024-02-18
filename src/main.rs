@@ -5,6 +5,7 @@ mod schema;
 
 use clap::Command;
 use diesel::{Connection, SqliteConnection};
+use diesel_migrations::MigrationHarness;
 use tracing::{error, info, Level};
 use tracing_subscriber::FmtSubscriber;
 
@@ -14,6 +15,8 @@ async fn main() {
         .with_max_level(Level::TRACE)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    let mut connection = establish_connection();
+    run_migrations(&mut connection);
 
     let m = Command::new("bot")
         .about("Bot to manage events on the fio API")
@@ -122,4 +125,14 @@ pub(crate) fn establish_connection() -> SqliteConnection {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+
+
+fn run_migrations(connection: &mut SqliteConnection) {
+    pub const MIGRATIONS: diesel_migrations::EmbeddedMigrations = diesel_migrations::embed_migrations!("migrations");
+    // This will run the necessary migrations.
+    //
+    // See the documentation for `MigrationHarness` for
+    // all available methods.
+    connection.run_pending_migrations(MIGRATIONS).unwrap();
 }
