@@ -72,14 +72,14 @@ async fn main() {
                                 subcommand.1.get_one::<String>("target_account").unwrap();
                             let account = subcommand.1.get_one::<i32>("account").unwrap();
                             let amount = subcommand.1.get_one::<i32>("amount").unwrap();
-                            let target_bank = subcommand.1.get_one::<str>("target_bank");
-                            let bic = subcommand.1.get_one::<str>("bic");
+                            let target_bank = subcommand.1.get_one::<String>("target_bank");
+                            let bic = subcommand.1.get_one::<String>("bic");
                             let ks = subcommand.1.get_one::<i32>("ks");
                             let vs = subcommand.1.get_one::<i32>("vs");
                             let ss = subcommand.1.get_one::<i32>("ss");
-                            let message = subcommand.1.get_one::<str>("message");
-                            let comment = subcommand.1.get_one::<str>("comment");
-                            let for_ = subcommand.1.get_one::<str>("for");
+                            let message = subcommand.1.get_one::<String>("message");
+                            let comment = subcommand.1.get_one::<String>("comment");
+                            let for_ = subcommand.1.get_one::<String>("for");
                             let payment_type = subcommand
                                 .1
                                 .get_one::<i32>("payment_type")
