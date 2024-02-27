@@ -2,8 +2,9 @@ pub mod subcommands;
 
 use crate::schema::account_tokens;
 use crate::schema::accounts;
-use diesel::{ExpressionMethods, Identifiable, NullableExpressionMethods, QueryDsl};
-use diesel::{Queryable, RunQueryDsl};
+use diesel::{
+    ExpressionMethods, Identifiable, NullableExpressionMethods, QueryDsl, Queryable, RunQueryDsl,
+};
 use tracing::error;
 
 pub fn add(name: &str, number: &i32, token: &str, read_only: &bool) {

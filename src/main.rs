@@ -80,14 +80,12 @@ async fn main() {
                             let message = subcommand.1.get_one::<String>("message");
                             let comment = subcommand.1.get_one::<String>("comment");
                             let for_ = subcommand.1.get_one::<String>("for");
-                            let payment_type = subcommand
-                                .1
-                                .get_one::<i32>("payment_type")
-                                .unwrap_or(&431_001);
+                            let payment_type =
+                                subcommand.1.get_one::<i32>("type").unwrap_or(&431_001);
                             let active = subcommand.1.get_flag("active");
                             let percent = subcommand.1.get_flag("percent");
-                            let sequence = subcommand.1.get_one::<i32>("sequence");
-                            rules::add(
+                            let sequence = subcommand.1.get_one::<i32>("order");
+                            match rules::add(
                                 account,
                                 amount,
                                 target_account,
@@ -103,7 +101,12 @@ async fn main() {
                                 active,
                                 percent,
                                 sequence,
-                            );
+                            ) {
+                                Ok(_) => {}
+                                Err(e) => {
+                                    error!("Error adding rule: {}", e);
+                                }
+                            }
                         }
                         "remove" => {
                             let name = subcommand.1.get_one::<String>("name").unwrap();

@@ -23,7 +23,7 @@ diesel::table! {
         amount -> Float,
         percent -> Integer,
         target_account -> Text,
-        target_bank -> Nullable<Integer>,
+        target_bank -> Nullable<Text>,
         bic -> Nullable<Text>,
         ks -> Nullable<Integer>,
         vs -> Nullable<Integer>,
