@@ -18,11 +18,11 @@ pub async fn check_accounts() {
                 }
                 let fio = fiocz_rs::Fio::new(&token.unwrap());
                 match fio.set_last_id("26329634966").await {
-                    Ok(_) => {
-                        info!("Set new stop")
+                    Ok(()) => {
+                        info!("Set new stop");
                     }
                     Err(e) => {
-                        error!("Failed to set last id: {:?}", e)
+                        error!("Failed to set last id: {:?}", e);
                     }
                 };
 
@@ -36,17 +36,17 @@ pub async fn check_accounts() {
                                 if key.to_ascii_lowercase() != "column1" {
                                     continue;
                                 }
-                                if let None = value {
+                                if value.is_none() {
                                 } else if let Some(data) = value {
                                     if let TransactionDataEnum::Decimal(f) = data.value {
-                                        sum = sum + f;
+                                        sum += f;
                                     }
                                 }
                             }
                         }
                     }
                     Err(e) => {
-                        error!("Failed to get newest account movements: {:?}", e)
+                        error!("Failed to get newest account movements: {:?}", e);
                     }
                 }
 

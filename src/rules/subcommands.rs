@@ -1,6 +1,6 @@
 use clap::{Arg, Command};
 
-pub fn generate_subcommands() -> Vec<Command> {
+pub fn generate() -> Vec<Command> {
     vec![
         Command::new("add")
             .about("Add a rule to the bot")

@@ -21,8 +21,8 @@ async fn main() {
     let m = Command::new("bot")
         .about("Bot to manage events on the fio API")
         .subcommands([
-            Command::new("account").subcommands(account::subcommands::generate_subcommands()),
-            Command::new("rule").subcommands(rules::subcommands::generate_subcommands()),
+            Command::new("account").subcommands(account::subcommands::generate()),
+            Command::new("rule").subcommands(rules::subcommands::generate()),
         ])
         .get_matches();
     match m.subcommand() {
@@ -44,7 +44,7 @@ async fn main() {
                             let number = subcommand.1.get_one::<i32>("number").unwrap();
                             let token = subcommand.1.get_one::<String>("token").unwrap();
                             let read_only = subcommand.1.get_flag("read_only");
-                            account::add(&name, number, &token, &read_only);
+                            account::add(name, number, token, &read_only);
                         }
                         "remove" => {
                             let name = subcommand.1.get_one::<String>("name").unwrap();
@@ -83,7 +83,7 @@ async fn main() {
                             let payment_type = subcommand
                                 .1
                                 .get_one::<i32>("payment_type")
-                                .unwrap_or(&431001);
+                                .unwrap_or(&431_001);
                             let active = subcommand.1.get_flag("active");
                             let percent = subcommand.1.get_flag("percent");
                             let sequence = subcommand.1.get_one::<i32>("sequence");
@@ -124,12 +124,12 @@ async fn main() {
 pub(crate) fn establish_connection() -> SqliteConnection {
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+        .unwrap_or_else(|_| panic!("Error connecting to {database_url}"))
 }
 
-
 fn run_migrations(connection: &mut SqliteConnection) {
-    pub const MIGRATIONS: diesel_migrations::EmbeddedMigrations = diesel_migrations::embed_migrations!("migrations");
+    pub const MIGRATIONS: diesel_migrations::EmbeddedMigrations =
+        diesel_migrations::embed_migrations!("migrations");
     // This will run the necessary migrations.
     //
     // See the documentation for `MigrationHarness` for

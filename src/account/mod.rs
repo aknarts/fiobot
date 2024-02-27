@@ -19,14 +19,14 @@ pub fn add(name: &str, number: &i32, token: &str, read_only: &bool) {
         .values((
             account_tokens::account.eq(number),
             account_tokens::token.eq(token),
-            account_tokens::read_only.eq(if *read_only { 1 } else { 0 }),
+            account_tokens::read_only.eq(i32::from(*read_only)),
         ))
         .on_conflict((account_tokens::account, account_tokens::read_only))
         .do_update()
         .set(account_tokens::token.eq(token))
         .execute(&mut conn)
         .expect("Error saving new account token");
-    println!("Account {} added", name);
+    println!("Account {name} added");
 }
 
 #[derive(Identifiable, Queryable)]
@@ -42,7 +42,7 @@ pub struct Account {
 #[diesel(belongs_to(AccountToken))]
 #[diesel(table_name = account_tokens)]
 #[diesel(primary_key(id))]
-pub struct AccountToken {
+pub struct Token {
     pub id: i32,
     pub account: i32,
     pub token: String,
@@ -57,7 +57,7 @@ pub fn list(show_tokens: bool) {
             accounts::all_columns,
             account_tokens::all_columns.nullable(),
         ))
-        .load::<(Account, Option<AccountToken>)>(&mut conn)
+        .load::<(Account, Option<Token>)>(&mut conn)
         .expect("Error loading accounts");
     println!("Displaying {} accounts", results.len());
     for (account, token) in results {
@@ -84,7 +84,7 @@ pub fn get_token(account: &str, read_only: bool) -> Option<String> {
     let result = accounts::table
         .inner_join(account_tokens::table)
         .filter(accounts::name.eq(account))
-        .filter(account_tokens::read_only.eq(if read_only { 1 } else { 0 }))
+        .filter(account_tokens::read_only.eq(i32::from(read_only)))
         .select(account_tokens::token)
         .first::<String>(&mut conn);
     match result {
@@ -133,5 +133,5 @@ pub fn remove(account: &str) {
     diesel::delete(account_tokens::table.filter(account_tokens::account.eq(acc.number)))
         .execute(&mut conn)
         .expect("Error deleting account token");
-    println!("Account {} removed", account);
+    println!("Account {account} removed");
 }
