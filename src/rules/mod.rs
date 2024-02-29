@@ -1,5 +1,6 @@
 use crate::schema::rules;
-use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
+use diesel::{ExpressionMethods, Identifiable, QueryDsl, Queryable, RunQueryDsl};
+use prettytable::{format, row};
 
 pub mod subcommands;
 
@@ -60,4 +61,83 @@ pub fn add(
         .execute(&mut conn)
         .expect("Error adding rule");
     Ok(())
+}
+
+#[derive(Identifiable, Queryable)]
+#[diesel(belongs_to(Rules))]
+#[diesel(table_name = rules)]
+#[diesel(primary_key(id))]
+pub struct Rule {
+    pub id: i32,
+    pub account: i32,
+    pub amount: f32,
+    pub percent: i32,
+    pub target_account: String,
+    pub target_bank: Option<String>,
+    pub bic: Option<String>,
+    pub ks: Option<i32>,
+    pub vs: Option<i32>,
+    pub ss: Option<i32>,
+    pub message: Option<String>,
+    pub comment: Option<String>,
+    pub for_: Option<String>,
+    pub payment_type: i32,
+    pub active: i32,
+    pub sequence: i32,
+}
+
+pub fn list() {
+    let mut conn = crate::establish_connection();
+    let result = rules::table
+        .select(rules::all_columns)
+        .load::<Rule>(&mut conn)
+        .expect("Error getting rules");
+    let mut table = prettytable::Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+    table.set_titles(row![
+        "ID",
+        "Account",
+        "Amount",
+        "Percent",
+        "Target account",
+        "Target bank",
+        "BIC",
+        "KS",
+        "VS",
+        "SS",
+        "Message",
+        "Comment",
+        "For",
+        "Payment type",
+        "Active",
+        "Sequence"
+    ]);
+    for rule in result {
+        table.add_row(row![
+            color -> rule.id,
+            rule.account,
+            rule.amount,
+            rule.percent,
+            rule.target_account,
+            rule.target_bank.unwrap_or("".to_string()),
+            rule.bic.unwrap_or("".to_string()),
+            rule.ks.unwrap_or(0),
+            rule.vs.unwrap_or(0),
+            rule.ss.unwrap_or(0),
+            rule.message.unwrap_or("".to_string()),
+            rule.comment.unwrap_or("".to_string()),
+            rule.for_.unwrap_or("".to_string()),
+            rule.payment_type,
+            rule.active,
+            rule.sequence
+        ]);
+    }
+    table.printstd();
+}
+
+pub fn remove(id: &i32) {
+    let mut conn = crate::establish_connection();
+    diesel::delete(rules::table.filter(rules::id.eq(id)))
+        .execute(&mut conn)
+        .expect("Error removing rule");
 }

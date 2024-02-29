@@ -85,7 +85,7 @@ async fn main() {
                             let active = subcommand.1.get_flag("active");
                             let percent = subcommand.1.get_flag("percent");
                             let sequence = subcommand.1.get_one::<i32>("order");
-                            match rules::add(
+                            if let Err(e) = rules::add(
                                 account,
                                 amount,
                                 target_account,
@@ -102,18 +102,15 @@ async fn main() {
                                 percent,
                                 sequence,
                             ) {
-                                Ok(_) => {}
-                                Err(e) => {
-                                    error!("Error adding rule: {}", e);
-                                }
+                                error!("Error adding rule: {}", e);
                             }
                         }
                         "remove" => {
-                            let name = subcommand.1.get_one::<String>("name").unwrap();
-                            // rules::remove(&name);
+                            let id = subcommand.1.get_one::<i32>("id").unwrap();
+                            rules::remove(id);
                         }
                         "list" => {
-                            // rules::list();
+                            rules::list();
                         }
                         _ => {}
                     };

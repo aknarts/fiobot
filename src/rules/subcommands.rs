@@ -248,6 +248,7 @@ pub fn generate() -> Vec<Command> {
                 Arg::new("id")
                     .short('i')
                     .long("id")
+                    .value_parser(clap::value_parser!(i32))
                     .help("ID of the rule to remove")
                     .required(true),
             ),
