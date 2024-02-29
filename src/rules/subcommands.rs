@@ -154,7 +154,6 @@ pub fn generate() -> Vec<Command> {
                 Arg::new("target_bank")
                     .short('u')
                     .long("target_bank")
-                    .value_parser(clap::value_parser!(i32))
                     .help("Account bank to send the money to")
                     .required(false),
             )
@@ -250,6 +249,16 @@ pub fn generate() -> Vec<Command> {
                     .long("id")
                     .value_parser(clap::value_parser!(i32))
                     .help("ID of the rule to remove")
+                    .required(true),
+            ),
+        Command::new("toggle")
+            .about("Activate/deactivate a rule from the bot")
+            .arg(
+                Arg::new("id")
+                    .short('i')
+                    .long("id")
+                    .value_parser(clap::value_parser!(i32))
+                    .help("ID of the rule to toggle")
                     .required(true),
             ),
         Command::new("list").about("List all rules").arg(

@@ -109,6 +109,46 @@ async fn main() {
                             let id = subcommand.1.get_one::<i32>("id").unwrap();
                             rules::remove(id);
                         }
+                        "edit" => {
+                            let id = subcommand.1.get_one::<i32>("id").unwrap();
+                            let target_account = subcommand.1.get_one::<String>("target_account");
+                            let account = subcommand.1.get_one::<i32>("account");
+                            let amount = subcommand.1.get_one::<i32>("amount");
+                            let target_bank = subcommand.1.get_one::<String>("target_bank");
+                            let bic = subcommand.1.get_one::<String>("bic");
+                            let ks = subcommand.1.get_one::<i32>("ks");
+                            let vs = subcommand.1.get_one::<i32>("vs");
+                            let ss = subcommand.1.get_one::<i32>("ss");
+                            let message = subcommand.1.get_one::<String>("message");
+                            let comment = subcommand.1.get_one::<String>("comment");
+                            let for_ = subcommand.1.get_one::<String>("for");
+                            let payment_type = subcommand.1.get_one::<i32>("type");
+                            let percent = subcommand.1.get_flag("percent");
+                            let sequence = subcommand.1.get_one::<i32>("order");
+                            if let Err(e) = rules::edit(
+                                id,
+                                account,
+                                amount,
+                                target_account,
+                                target_bank,
+                                bic,
+                                ks,
+                                vs,
+                                ss,
+                                message,
+                                comment,
+                                for_,
+                                payment_type,
+                                percent,
+                                sequence,
+                            ) {
+                                error!("Error editing rule: {}", e);
+                            }
+                        }
+                        "toggle" => {
+                            let id = subcommand.1.get_one::<i32>("id").unwrap();
+                            rules::toggle(id);
+                        }
                         "list" => {
                             rules::list();
                         }

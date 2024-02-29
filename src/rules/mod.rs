@@ -135,9 +135,142 @@ pub fn list() {
     table.printstd();
 }
 
+pub fn edit(
+    id: &i32,
+    account: Option<&i32>,
+    amount: Option<&i32>,
+    target_account: Option<&String>,
+    target_bank: Option<&String>,
+    bic: Option<&String>,
+    ks: Option<&i32>,
+    vs: Option<&i32>,
+    ss: Option<&i32>,
+    message: Option<&String>,
+    comment: Option<&String>,
+    for_: Option<&String>,
+    payment_type: Option<&i32>,
+    percent: bool,
+    sequence: Option<&i32>,
+) -> Result<(), &'static str> {
+    let mut conn = crate::establish_connection();
+    if account.is_some() {
+        let account_verified = match crate::account::get_account_by_number(account.unwrap()) {
+            None => return Err("Account not found"),
+            Some(a) => a.number,
+        };
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::account.eq(account_verified))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if amount.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set((
+                rules::amount.eq(*amount.unwrap() as f32),
+                rules::percent.eq(percent as i32),
+            ))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if target_account.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::target_account.eq(target_account.unwrap()))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if target_bank.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::target_bank.eq(target_bank))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if bic.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::bic.eq(bic))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if ks.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::ks.eq(ks))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if vs.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::vs.eq(vs))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if ss.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::ss.eq(ss))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if message.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::message.eq(message))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if comment.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::comment.eq(comment))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if for_.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::for_.eq(for_))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if payment_type.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::payment_type.eq(payment_type.unwrap()))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    if sequence.is_some() {
+        diesel::update(rules::table)
+            .filter(rules::id.eq(id))
+            .set(rules::sequence.eq(sequence.unwrap()))
+            .execute(&mut conn)
+            .expect("Error editing rule");
+    }
+    Ok(())
+}
+
 pub fn remove(id: &i32) {
     let mut conn = crate::establish_connection();
     diesel::delete(rules::table.filter(rules::id.eq(id)))
         .execute(&mut conn)
         .expect("Error removing rule");
+}
+
+pub fn toggle(id: &i32) {
+    let mut conn = crate::establish_connection();
+    let rule = rules::table
+        .filter(rules::id.eq(id))
+        .first::<Rule>(&mut conn)
+        .expect("Error getting rule");
+    let new_active = if rule.active == 0 { 1 } else { 0 };
+    diesel::update(rules::table)
+        .filter(rules::id.eq(id))
+        .set(rules::active.eq(new_active))
+        .execute(&mut conn)
+        .expect("Error toggling rule");
 }
