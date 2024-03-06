@@ -1,11 +1,11 @@
 use crate::schema::rules;
 use diesel::{ExpressionMethods, Identifiable, QueryDsl, Queryable, RunQueryDsl};
-use prettytable::{format, row};
+use prettytable::{format, row, Table};
 
 pub mod subcommands;
 
 pub fn add(
-    account: &i32,
+    account: &i64,
     amount: &i32,
     target_account: &str,
     target_bank: Option<&String>,
@@ -63,13 +63,13 @@ pub fn add(
     Ok(())
 }
 
-#[derive(Identifiable, Queryable)]
+#[derive(Identifiable, Queryable, Debug, PartialEq, Clone)]
 #[diesel(belongs_to(Rules))]
 #[diesel(table_name = rules)]
 #[diesel(primary_key(id))]
 pub struct Rule {
     pub id: i32,
-    pub account: i32,
+    pub account: i64,
     pub amount: f32,
     pub percent: i32,
     pub target_account: String,
@@ -86,12 +86,7 @@ pub struct Rule {
     pub sequence: i32,
 }
 
-pub fn list() {
-    let mut conn = crate::establish_connection();
-    let result = rules::table
-        .select(rules::all_columns)
-        .load::<Rule>(&mut conn)
-        .expect("Error getting rules");
+pub fn list(account: Option<&i64>) {
     let mut table = prettytable::Table::new();
     table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
     table.set_titles(row![
@@ -112,6 +107,27 @@ pub fn list() {
         "Active",
         "Sequence"
     ]);
+    match account {
+        None => {
+            for account in crate::account::get_accounts() {
+                while table.len() > 0 {
+                    table.remove_row(0);
+                }
+                println!("Account: {}", account.number);
+                let result = get_rules_for_account(&account.number);
+                build_table_row(&mut table, result);
+                table.printstd();
+            }
+        }
+        Some(account) => {
+            let result = get_rules_for_account(account);
+            build_table_row(&mut table, result);
+            table.printstd();
+        }
+    }
+}
+
+fn build_table_row(table: &mut Table, result: Vec<Rule>) {
     for rule in result {
         table.add_row(row![
             color -> rule.id,
@@ -132,12 +148,20 @@ pub fn list() {
             rule.sequence
         ]);
     }
-    table.printstd();
+}
+
+pub fn get_rules_for_account(account: &i64) -> Vec<Rule> {
+    let mut conn = crate::establish_connection();
+    rules::table
+        .filter(rules::account.eq(account))
+        .order(rules::sequence)
+        .load::<Rule>(&mut conn)
+        .expect("Error getting rules for account")
 }
 
 pub fn edit(
     id: &i32,
-    account: Option<&i32>,
+    account: Option<&i64>,
     amount: Option<&i32>,
     target_account: Option<&String>,
     target_bank: Option<&String>,

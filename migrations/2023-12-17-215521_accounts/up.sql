@@ -1,7 +1,7 @@
 -- Your SQL goes here
 CREATE TABLE accounts
 (
-    number INTEGER NOT NULL
+    number BIG INT NOT NULL
         CONSTRAINT accounts_pk
             PRIMARY KEY,
     name   TEXT    NOT NULL
@@ -10,7 +10,7 @@ CREATE TABLE accounts
 CREATE TABLE account_tokens
 (
     id        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    account   INTEGER NOT NULL
+    account   BIG INT NOT NULL
         CONSTRAINT account_tokens_accounts_number_fk
             REFERENCES accounts
             ON DELETE CASCADE,

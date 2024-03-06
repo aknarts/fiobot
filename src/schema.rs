@@ -3,7 +3,7 @@
 diesel::table! {
     account_tokens (id) {
         id -> Integer,
-        account -> Integer,
+        account -> BigInt,
         token -> Text,
         read_only -> Integer,
     }
@@ -11,7 +11,7 @@ diesel::table! {
 
 diesel::table! {
     accounts (number) {
-        number -> Integer,
+        number -> BigInt,
         name -> Text,
     }
 }
@@ -19,7 +19,7 @@ diesel::table! {
 diesel::table! {
     rules (id) {
         id -> Integer,
-        account -> Integer,
+        account -> BigInt,
         amount -> Float,
         percent -> Integer,
         target_account -> Text,
@@ -41,8 +41,4 @@ diesel::table! {
 diesel::joinable!(account_tokens -> accounts (account));
 diesel::joinable!(rules -> accounts (account));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    account_tokens,
-    accounts,
-    rules,
-);
+diesel::allow_tables_to_appear_in_same_query!(account_tokens, accounts, rules,);

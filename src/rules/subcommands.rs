@@ -9,7 +9,7 @@ pub fn generate() -> Vec<Command> {
                     .short('a')
                     .long("account")
                     .help("Account the rule is for")
-                    .value_parser(clap::value_parser!(i32))
+                    .value_parser(clap::value_parser!(i64))
                     .required(true),
             )
             .arg(
@@ -264,7 +264,7 @@ pub fn generate() -> Vec<Command> {
         Command::new("list").about("List all rules").arg(
             Arg::new("account")
                 .short('a')
-                .action(clap::ArgAction::SetTrue)
+                .value_parser(clap::value_parser!(i64))
                 .long("account")
                 .help("Show rules for account accounts")
                 .required(false),

@@ -15,7 +15,7 @@ pub fn generate() -> Vec<Command> {
                 Arg::new("number")
                     .short('b')
                     .long("number")
-                    .value_parser(clap::value_parser!(i32))
+                    .value_parser(clap::value_parser!(i64))
                     .help("Number of the account to add")
                     .required(true),
             )

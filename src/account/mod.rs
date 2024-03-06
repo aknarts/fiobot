@@ -7,7 +7,7 @@ use diesel::{
 };
 use tracing::error;
 
-pub fn add(name: &str, number: &i32, token: &str, read_only: &bool) {
+pub fn add(name: &str, number: &i64, token: &str, read_only: &bool) {
     let mut conn = crate::establish_connection();
     diesel::insert_into(accounts::table)
         .values(&(accounts::number.eq(number), accounts::name.eq(name)))
@@ -35,7 +35,7 @@ pub fn add(name: &str, number: &i32, token: &str, read_only: &bool) {
 #[diesel(table_name = accounts)]
 #[diesel(primary_key(name))]
 pub struct Account {
-    pub number: i32,
+    pub number: i64,
     pub name: String,
 }
 
@@ -45,7 +45,7 @@ pub struct Account {
 #[diesel(primary_key(id))]
 pub struct Token {
     pub id: i32,
-    pub account: i32,
+    pub account: i64,
     pub token: String,
     pub read_only: i32,
 }
@@ -111,7 +111,7 @@ pub fn get_account_by_name(name: &str) -> Option<Account> {
     }
 }
 
-pub fn get_account_by_number(number: &i32) -> Option<Account> {
+pub fn get_account_by_number(number: &i64) -> Option<Account> {
     let mut conn = crate::establish_connection();
     let result = accounts::table
         .filter(accounts::number.eq(number))
@@ -135,4 +135,15 @@ pub fn remove(account: &str) {
         .execute(&mut conn)
         .expect("Error deleting account token");
     println!("Account {account} removed");
+}
+
+pub fn get_accounts() -> Vec<Account> {
+    let mut conn = crate::establish_connection();
+    let result = accounts::table
+        .select(accounts::all_columns)
+        .load::<Account>(&mut conn);
+    result.unwrap_or_else(|e| {
+        error!("Could not get accounts: {}", e);
+        vec![]
+    })
 }

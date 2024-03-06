@@ -12,7 +12,7 @@ use tracing_subscriber::FmtSubscriber;
 #[tokio::main]
 async fn main() {
     let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::TRACE)
+        .with_max_level(Level::INFO)
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
     let mut connection = establish_connection();
@@ -41,7 +41,7 @@ async fn main() {
                     match subcommand.0 {
                         "add" => {
                             let name = subcommand.1.get_one::<String>("name").unwrap();
-                            let number = subcommand.1.get_one::<i32>("number").unwrap();
+                            let number = subcommand.1.get_one::<i64>("number").unwrap();
                             let token = subcommand.1.get_one::<String>("token").unwrap();
                             let read_only = subcommand.1.get_flag("read_only");
                             account::add(name, number, token, &read_only);
@@ -70,7 +70,7 @@ async fn main() {
                         "add" => {
                             let target_account =
                                 subcommand.1.get_one::<String>("target_account").unwrap();
-                            let account = subcommand.1.get_one::<i32>("account").unwrap();
+                            let account = subcommand.1.get_one::<i64>("account").unwrap();
                             let amount = subcommand.1.get_one::<i32>("amount").unwrap();
                             let target_bank = subcommand.1.get_one::<String>("target_bank");
                             let bic = subcommand.1.get_one::<String>("bic");
@@ -112,7 +112,7 @@ async fn main() {
                         "edit" => {
                             let id = subcommand.1.get_one::<i32>("id").unwrap();
                             let target_account = subcommand.1.get_one::<String>("target_account");
-                            let account = subcommand.1.get_one::<i32>("account");
+                            let account = subcommand.1.get_one::<i64>("account");
                             let amount = subcommand.1.get_one::<i32>("amount");
                             let target_bank = subcommand.1.get_one::<String>("target_bank");
                             let bic = subcommand.1.get_one::<String>("bic");
@@ -150,7 +150,8 @@ async fn main() {
                             rules::toggle(id);
                         }
                         "list" => {
-                            rules::list();
+                            let account = subcommand.1.get_one::<i64>("account");
+                            rules::list(account);
                         }
                         _ => {}
                     };

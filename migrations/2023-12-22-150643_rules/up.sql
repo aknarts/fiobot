@@ -4,7 +4,7 @@ CREATE TABLE rules
     id             INTEGER NOT NULL
         CONSTRAINT rules_pk
             PRIMARY KEY AUTOINCREMENT,
-    account        INTEGER NOT NULL
+    account        BIG INT NOT NULL
         CONSTRAINT rules_accounts_number_fk
             REFERENCES accounts,
     amount         REAL    NOT NULL,
