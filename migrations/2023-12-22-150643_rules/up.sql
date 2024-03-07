@@ -7,7 +7,7 @@ CREATE TABLE rules
     account        BIG INT NOT NULL
         CONSTRAINT rules_accounts_number_fk
             REFERENCES accounts,
-    amount         REAL    NOT NULL,
+    amount         INTEGER NOT NULL,
     percent        INTEGER NOT NULL,
     target_account TEXT    NOT NULL,
     target_bank    TEXT,

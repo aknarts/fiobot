@@ -35,18 +35,18 @@ pub async fn check_accounts() {
                 info!("Account {} has sum {}", account.name, sum);
                 if sum > rust_decimal::Decimal::new(0, 0) {
                     let mut builder = ImportBuilder::new();
-                    let rules = crate::rules::get_rules_for_account(&account.number);
+                    let rules = crate::rules::get_rules_for_account(account.number);
                     for rule in &rules {
                         if rule.bic.is_none() {
                             let amount = if rule.percent > 0 {
-                                (sum * rust_decimal::Decimal::from_f32(rule.amount / 100.0)
-                                    .unwrap())
+                                (sum * rust_decimal::Decimal::from_i32(rule.amount).unwrap()
+                                    / rust_decimal::Decimal::new(100, 0))
                                 .round_dp_with_strategy(
                                     2,
                                     rust_decimal::RoundingStrategy::ToNegativeInfinity,
                                 )
                             } else {
-                                rust_decimal::Decimal::from_f32(rule.amount)
+                                rust_decimal::Decimal::from_i32(rule.amount)
                                     .unwrap()
                                     .round_dp_with_strategy(
                                         2,
@@ -62,10 +62,10 @@ pub async fn check_accounts() {
                                 currency: info.currency.clone(),
                                 amount,
                                 account_to: rule.target_account.clone(),
-                                bank_code: format!("{}", rule.target_bank.clone().unwrap()),
-                                ks: rule.ks.map(|v| format!("{}", v)),
-                                vs: rule.vs.map(|v| format!("{}", v)),
-                                ss: rule.ss.map(|v| format!("{}", v)),
+                                bank_code: rule.target_bank.clone().unwrap(),
+                                ks: rule.ks.map(|v| format!("{v}")),
+                                vs: rule.vs.map(|v| format!("{v}")),
+                                ss: rule.ss.map(|v| format!("{v}")),
                                 date: format!("{}", time::OffsetDateTime::now_utc().date()),
                                 message_for_recipient: rule.message.clone(),
                                 comment: rule.comment.clone(),
@@ -74,7 +74,7 @@ pub async fn check_accounts() {
                             });
                         };
                     }
-                    if rules.len() > 0 {
+                    if !rules.is_empty() {
                         info!("{:?}", builder.build());
                         info!("Post transaction");
                         match fio.import_transactions(builder.build()).await {

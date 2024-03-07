@@ -44,11 +44,11 @@ async fn main() {
                             let number = subcommand.1.get_one::<i64>("number").unwrap();
                             let token = subcommand.1.get_one::<String>("token").unwrap();
                             let read_only = subcommand.1.get_flag("read_only");
-                            account::add(name, number, token, &read_only);
+                            account::add(name, *number, token, read_only);
                         }
                         "remove" => {
                             let name = subcommand.1.get_one::<String>("name").unwrap();
-                            account::remove(&name);
+                            account::remove(name);
                         }
                         "list" => {
                             let show_tokens = subcommand.1.get_flag("show_tokens");
@@ -86,8 +86,8 @@ async fn main() {
                             let percent = subcommand.1.get_flag("percent");
                             let sequence = subcommand.1.get_one::<i32>("order");
                             if let Err(e) = rules::add(
-                                account,
-                                amount,
+                                *account,
+                                *amount,
                                 target_account,
                                 target_bank,
                                 bic,
@@ -97,7 +97,7 @@ async fn main() {
                                 message,
                                 comment,
                                 for_,
-                                payment_type,
+                                *payment_type,
                                 active,
                                 percent,
                                 sequence,
@@ -107,7 +107,7 @@ async fn main() {
                         }
                         "remove" => {
                             let id = subcommand.1.get_one::<i32>("id").unwrap();
-                            rules::remove(id);
+                            rules::remove(*id);
                         }
                         "edit" => {
                             let id = subcommand.1.get_one::<i32>("id").unwrap();
@@ -126,7 +126,7 @@ async fn main() {
                             let percent = subcommand.1.get_flag("percent");
                             let sequence = subcommand.1.get_one::<i32>("order");
                             if let Err(e) = rules::edit(
-                                id,
+                                *id,
                                 account,
                                 amount,
                                 target_account,
@@ -147,7 +147,7 @@ async fn main() {
                         }
                         "toggle" => {
                             let id = subcommand.1.get_one::<i32>("id").unwrap();
-                            rules::toggle(id);
+                            rules::toggle(*id);
                         }
                         "list" => {
                             let account = subcommand.1.get_one::<i64>("account");

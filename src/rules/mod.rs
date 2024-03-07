@@ -5,8 +5,8 @@ use prettytable::{format, row, Table};
 pub mod subcommands;
 
 pub fn add(
-    account: &i64,
-    amount: &i32,
+    account: i64,
+    amount: i32,
     target_account: &str,
     target_bank: Option<&String>,
     bic: Option<&String>,
@@ -16,7 +16,7 @@ pub fn add(
     message: Option<&String>,
     comment: Option<&String>,
     for_: Option<&String>,
-    payment_type: &i32,
+    payment_type: i32,
     active: bool,
     percent: bool,
     sequence: Option<&i32>,
@@ -43,7 +43,7 @@ pub fn add(
     diesel::insert_into(rules::table)
         .values((
             rules::account.eq(account_verified),
-            rules::amount.eq(*amount as f32),
+            rules::amount.eq(amount),
             rules::target_account.eq(target_account),
             rules::target_bank.eq(target_bank),
             rules::bic.eq(bic),
@@ -53,9 +53,9 @@ pub fn add(
             rules::message.eq(message),
             rules::comment.eq(comment),
             rules::for_.eq(for_),
-            rules::payment_type.eq(*payment_type),
-            rules::active.eq(active as i32),
-            rules::percent.eq(percent as i32),
+            rules::payment_type.eq(payment_type),
+            rules::active.eq(i32::from(active)),
+            rules::percent.eq(i32::from(percent)),
             rules::sequence.eq(sequence_verified),
         ))
         .execute(&mut conn)
@@ -63,14 +63,14 @@ pub fn add(
     Ok(())
 }
 
-#[derive(Identifiable, Queryable, Debug, PartialEq, Clone)]
+#[derive(Identifiable, Queryable, Debug, Eq, PartialEq, Clone)]
 #[diesel(belongs_to(Rules))]
 #[diesel(table_name = rules)]
 #[diesel(primary_key(id))]
 pub struct Rule {
     pub id: i32,
     pub account: i64,
-    pub amount: f32,
+    pub amount: i32,
     pub percent: i32,
     pub target_account: String,
     pub target_bank: Option<String>,
@@ -110,17 +110,17 @@ pub fn list(account: Option<&i64>) {
     match account {
         None => {
             for account in crate::account::get_accounts() {
-                while table.len() > 0 {
+                while !table.is_empty() {
                     table.remove_row(0);
                 }
                 println!("Account: {}", account.number);
-                let result = get_rules_for_account(&account.number);
+                let result = get_rules_for_account(account.number);
                 build_table_row(&mut table, result);
                 table.printstd();
             }
         }
         Some(account) => {
-            let result = get_rules_for_account(account);
+            let result = get_rules_for_account(*account);
             build_table_row(&mut table, result);
             table.printstd();
         }
@@ -135,14 +135,14 @@ fn build_table_row(table: &mut Table, result: Vec<Rule>) {
             rule.amount,
             rule.percent,
             rule.target_account,
-            rule.target_bank.unwrap_or("".to_string()),
-            rule.bic.unwrap_or("".to_string()),
+            rule.target_bank.unwrap_or(String::new()),
+            rule.bic.unwrap_or(String::new()),
             rule.ks.unwrap_or(0),
             rule.vs.unwrap_or(0),
             rule.ss.unwrap_or(0),
-            rule.message.unwrap_or("".to_string()),
-            rule.comment.unwrap_or("".to_string()),
-            rule.for_.unwrap_or("".to_string()),
+            rule.message.unwrap_or(String::new()),
+            rule.comment.unwrap_or(String::new()),
+            rule.for_.unwrap_or(String::new()),
             rule.payment_type,
             rule.active,
             rule.sequence
@@ -150,7 +150,7 @@ fn build_table_row(table: &mut Table, result: Vec<Rule>) {
     }
 }
 
-pub fn get_rules_for_account(account: &i64) -> Vec<Rule> {
+pub fn get_rules_for_account(account: i64) -> Vec<Rule> {
     let mut conn = crate::establish_connection();
     rules::table
         .filter(rules::account.eq(account))
@@ -160,7 +160,7 @@ pub fn get_rules_for_account(account: &i64) -> Vec<Rule> {
 }
 
 pub fn edit(
-    id: &i32,
+    id: i32,
     account: Option<&i64>,
     amount: Option<&i32>,
     target_account: Option<&String>,
@@ -178,7 +178,7 @@ pub fn edit(
 ) -> Result<(), &'static str> {
     let mut conn = crate::establish_connection();
     if account.is_some() {
-        let account_verified = match crate::account::get_account_by_number(account.unwrap()) {
+        let account_verified = match crate::account::get_account_by_number(*account.unwrap()) {
             None => return Err("Account not found"),
             Some(a) => a.number,
         };
@@ -188,24 +188,24 @@ pub fn edit(
             .execute(&mut conn)
             .expect("Error editing rule");
     }
-    if amount.is_some() {
+    if let Some(amount) = amount {
         diesel::update(rules::table)
             .filter(rules::id.eq(id))
             .set((
-                rules::amount.eq(*amount.unwrap() as f32),
-                rules::percent.eq(percent as i32),
+                rules::amount.eq(amount),
+                rules::percent.eq(i32::from(percent)),
             ))
             .execute(&mut conn)
             .expect("Error editing rule");
     }
-    if target_account.is_some() {
+    if let Some(target_account) = target_account {
         diesel::update(rules::table)
             .filter(rules::id.eq(id))
-            .set(rules::target_account.eq(target_account.unwrap()))
+            .set(rules::target_account.eq(target_account))
             .execute(&mut conn)
             .expect("Error editing rule");
     }
-    if target_bank.is_some() {
+    if let Some(target_bank) = target_bank {
         diesel::update(rules::table)
             .filter(rules::id.eq(id))
             .set(rules::target_bank.eq(target_bank))
@@ -261,37 +261,37 @@ pub fn edit(
             .execute(&mut conn)
             .expect("Error editing rule");
     }
-    if payment_type.is_some() {
+    if let Some(payment_type) = payment_type {
         diesel::update(rules::table)
             .filter(rules::id.eq(id))
-            .set(rules::payment_type.eq(payment_type.unwrap()))
+            .set(rules::payment_type.eq(payment_type))
             .execute(&mut conn)
             .expect("Error editing rule");
     }
-    if sequence.is_some() {
+    if let Some(sequence) = sequence {
         diesel::update(rules::table)
             .filter(rules::id.eq(id))
-            .set(rules::sequence.eq(sequence.unwrap()))
+            .set(rules::sequence.eq(sequence))
             .execute(&mut conn)
             .expect("Error editing rule");
     }
     Ok(())
 }
 
-pub fn remove(id: &i32) {
+pub fn remove(id: i32) {
     let mut conn = crate::establish_connection();
     diesel::delete(rules::table.filter(rules::id.eq(id)))
         .execute(&mut conn)
         .expect("Error removing rule");
 }
 
-pub fn toggle(id: &i32) {
+pub fn toggle(id: i32) {
     let mut conn = crate::establish_connection();
     let rule = rules::table
         .filter(rules::id.eq(id))
         .first::<Rule>(&mut conn)
         .expect("Error getting rule");
-    let new_active = if rule.active == 0 { 1 } else { 0 };
+    let new_active = i32::from(rule.active == 0);
     diesel::update(rules::table)
         .filter(rules::id.eq(id))
         .set(rules::active.eq(new_active))

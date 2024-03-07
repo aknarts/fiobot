@@ -7,7 +7,7 @@ use diesel::{
 };
 use tracing::error;
 
-pub fn add(name: &str, number: &i64, token: &str, read_only: &bool) {
+pub fn add(name: &str, number: i64, token: &str, read_only: bool) {
     let mut conn = crate::establish_connection();
     diesel::insert_into(accounts::table)
         .values(&(accounts::number.eq(number), accounts::name.eq(name)))
@@ -20,7 +20,7 @@ pub fn add(name: &str, number: &i64, token: &str, read_only: &bool) {
         .values((
             account_tokens::account.eq(number),
             account_tokens::token.eq(token),
-            account_tokens::read_only.eq(i32::from(*read_only)),
+            account_tokens::read_only.eq(i32::from(read_only)),
         ))
         .on_conflict((account_tokens::account, account_tokens::read_only))
         .do_update()
@@ -111,7 +111,7 @@ pub fn get_account_by_name(name: &str) -> Option<Account> {
     }
 }
 
-pub fn get_account_by_number(number: &i64) -> Option<Account> {
+pub fn get_account_by_number(number: i64) -> Option<Account> {
     let mut conn = crate::establish_connection();
     let result = accounts::table
         .filter(accounts::number.eq(number))

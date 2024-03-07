@@ -20,7 +20,7 @@ diesel::table! {
     rules (id) {
         id -> Integer,
         account -> BigInt,
-        amount -> Float,
+        amount -> Integer,
         percent -> Integer,
         target_account -> Text,
         target_bank -> Nullable<Text>,
