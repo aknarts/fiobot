@@ -1,6 +1,7 @@
 use crate::account::get_accounts;
-use fiocz_rs::types::account_statement::TransactionDataEnum;
+use fiocz_rs::types::account_statement::{Info, TransactionDataEnum};
 use fiocz_rs::types::transaction::{ImportBuilder, Type};
+use lettre::Transport;
 use rust_decimal::prelude::FromPrimitive;
 use tracing::{error, info};
 
@@ -34,6 +35,7 @@ pub async fn check_accounts() {
                 info!("Account info: {:?}", info.clone());
                 info!("Account {} has sum {}", account.name, sum);
                 if sum > rust_decimal::Decimal::new(0, 0) {
+                    let original_sum = sum.clone();
                     let mut builder = ImportBuilder::new();
                     let rules = crate::rules::get_rules_for_account(account.number);
                     for rule in &rules {
@@ -80,6 +82,11 @@ pub async fn check_accounts() {
                         match fio.import_transactions(builder.build()).await {
                             Ok(v) => {
                                 info!("Transaction posted: {:?}", v);
+                                if let Some(to) =
+                                    crate::emails::get_email_by_account(account.number)
+                                {
+                                    send_email(to, info, original_sum);
+                                }
                             }
                             Err(e) => {
                                 error!("Failed to post transaction: {:?}", e);
@@ -91,6 +98,57 @@ pub async fn check_accounts() {
             Err(e) => {
                 error!("Failed to get newest account movements: {:?}", e);
             }
+        }
+    }
+}
+
+fn send_email(to: String, info: Info, original_sum: rust_decimal::Decimal) {
+    let from_email = std::env::var("FROM_EMAIL").expect("FROM_EMAIL must be set");
+    let email = lettre::Message::builder()
+        .from(from_email.parse().unwrap())
+        .to(to.parse().unwrap())
+        .subject("Fio transactions pending")
+        .multipart(
+            lettre::message::MultiPart::alternative()
+                .singlepart(
+                    lettre::message::SinglePart::builder()
+                        .header(lettre::message::header::ContentType::TEXT_PLAIN)
+                        .body(format!(
+                            r#"There are transactions pending for {}
+Total value: {} {}"#,
+                            info.account_id, original_sum, info.currency
+                        )),
+                )
+                .singlepart(
+                    lettre::message::SinglePart::builder()
+                        .header(lettre::message::header::ContentType::TEXT_HTML)
+                        .body(format!(
+                            r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fio transactions pending!</title>
+</head>
+<body>
+    <div style="display: flex; flex-direction: column; align-items: left;">
+        <p style="font-family: Arial, Helvetica, sans-serif;">There are transactions pending for {}</p>
+        <p style="font-family: Arial, Helvetica, sans-serif;">Total value: {} {}</p>
+    </div>
+</body>
+</html>"#,
+                            info.account_id, original_sum, info.currency
+                        )),
+                ),
+        ).expect("Failed to build email");
+
+    let mailer = lettre::SendmailTransport::new();
+    match mailer.send(&email) {
+        Ok(_) => {
+            info!("Email sent");
+        }
+        Err(e) => {
+            error!("Failed to send email: {:?}", e);
         }
     }
 }

@@ -17,6 +17,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    emails (id) {
+        id -> Integer,
+        account -> BigInt,
+        email -> Text,
+    }
+}
+
+diesel::table! {
     rules (id) {
         id -> Integer,
         account -> BigInt,
@@ -39,6 +47,12 @@ diesel::table! {
 }
 
 diesel::joinable!(account_tokens -> accounts (account));
+diesel::joinable!(emails -> accounts (account));
 diesel::joinable!(rules -> accounts (account));
 
-diesel::allow_tables_to_appear_in_same_query!(account_tokens, accounts, rules,);
+diesel::allow_tables_to_appear_in_same_query!(
+    account_tokens,
+    accounts,
+    emails,
+    rules,
+);

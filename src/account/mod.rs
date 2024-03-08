@@ -54,6 +54,7 @@ pub fn list(show_tokens: bool) {
     let mut conn = crate::establish_connection();
     let results = accounts::table
         .left_join(account_tokens::table)
+        .filter(accounts::number.ne(0))
         .select((
             accounts::all_columns,
             account_tokens::all_columns.nullable(),
@@ -126,6 +127,14 @@ pub fn get_account_by_number(number: i64) -> Option<Account> {
 }
 
 pub fn remove(account: &str) {
+    match get_account_by_name(account) {
+        None => return,
+        Some(a) => {
+            if a.number == 0 {
+                return;
+            }
+        }
+    };
     let mut conn = crate::establish_connection();
     let acc = get_account_by_name(account).unwrap();
     diesel::delete(accounts::table.filter(accounts::name.eq(account)))
@@ -140,6 +149,7 @@ pub fn remove(account: &str) {
 pub fn get_accounts() -> Vec<Account> {
     let mut conn = crate::establish_connection();
     let result = accounts::table
+        .filter(accounts::number.ne(0))
         .select(accounts::all_columns)
         .load::<Account>(&mut conn);
     result.unwrap_or_else(|e| {

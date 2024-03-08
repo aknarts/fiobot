@@ -1,5 +1,6 @@
 mod account;
 mod bot;
+mod emails;
 mod rules;
 mod schema;
 
@@ -23,6 +24,7 @@ async fn main() {
         .subcommands([
             Command::new("account").subcommands(account::subcommands::generate()),
             Command::new("rule").subcommands(rules::subcommands::generate()),
+            Command::new("email").subcommands(emails::subcommands::generate()),
         ])
         .get_matches();
     match m.subcommand() {
@@ -152,6 +154,34 @@ async fn main() {
                         "list" => {
                             let account = subcommand.1.get_one::<i64>("account");
                             rules::list(account);
+                        }
+                        _ => {}
+                    };
+                }
+            },
+            "email" => match command.1.subcommand() {
+                None => {
+                    error!("You must specify a subcommand");
+                    info!("add: Add an email to the bot");
+                    info!("remove: Remove an email from the bot");
+                    info!("list: List all emails");
+                }
+                Some(subcommand) => {
+                    match subcommand.0 {
+                        "add" => {
+                            let account = subcommand.1.get_one::<i64>("account");
+                            let email = subcommand.1.get_one::<String>("mail").unwrap();
+                            let default = subcommand.1.get_flag("default");
+                            if let Err(e) = emails::add(account, email, default) {
+                                error!("Error adding email: {}", e);
+                            }
+                        }
+                        "remove" => {
+                            let account = subcommand.1.get_one::<i64>("account").unwrap();
+                            emails::remove(*account);
+                        }
+                        "list" => {
+                            emails::list();
                         }
                         _ => {}
                     };

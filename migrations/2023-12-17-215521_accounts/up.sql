@@ -7,6 +7,9 @@ CREATE TABLE accounts
     name   TEXT    NOT NULL
 );
 
+INSERT INTO accounts (number, name)
+VALUES (0, 'Default account');
+
 CREATE TABLE account_tokens
 (
     id        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
