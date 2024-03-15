@@ -1,5 +1,6 @@
 use crate::account::get_accounts;
-use fiocz_rs::types::account_statement::{Info, TransactionDataEnum};
+use fiocz_rs::error::Error;
+use fiocz_rs::types::account_statement::Info;
 use fiocz_rs::types::transaction::{ImportBuilder, Type};
 use lettre::Transport;
 use rust_decimal::prelude::FromPrimitive;
@@ -19,19 +20,20 @@ pub async fn check_accounts() {
         match fio.movements_since_last().await {
             Ok(statement) => {
                 let info = statement.account_statement.info;
-                for transaction in statement.account_statement.transaction_list.transaction {
-                    for (key, value) in transaction {
-                        if key.to_ascii_lowercase() != "column1" {
-                            continue;
-                        }
-                        if value.is_none() {
-                        } else if let Some(data) = value {
-                            if let TransactionDataEnum::Decimal(f) = data.value {
-                                sum += f;
-                            }
-                        }
-                    }
-                }
+                // for transaction in statement.account_statement.transaction_list.transaction {
+                //     for (key, value) in transaction {
+                //         if key.to_ascii_lowercase() != "column1" {
+                //             continue;
+                //         }
+                //         if value.is_none() {
+                //         } else if let Some(data) = value {
+                //             if let TransactionDataEnum::Decimal(f) = data.value {
+                //                 sum += f;
+                //             }
+                //         }
+                //     }
+                // }
+                sum += info.closing_balance;
                 info!("Account info: {:?}", info.clone());
                 info!("Account {} has sum {}", account.name, sum);
                 if sum > rust_decimal::Decimal::new(0, 0) {
@@ -79,19 +81,32 @@ pub async fn check_accounts() {
                     if !rules.is_empty() {
                         info!("{:?}", builder.build());
                         info!("Post transaction");
-                        match fio.import_transactions(builder.build()).await {
-                            Ok(v) => {
-                                info!("Transaction posted: {:?}", v);
-                                if let Some(to) =
-                                    crate::emails::get_email_by_account(account.number)
-                                {
-                                    send_email(to, info, original_sum);
+                        let mut retries = 0;
+                        while retries <= 3 {
+                            match fio.import_transactions(builder.build()).await {
+                                Ok(v) => {
+                                    info!("Transaction posted: {:?}", v);
+                                    if let Some(to) =
+                                        crate::emails::get_email_by_account(account.number)
+                                    {
+                                        send_email(to, info.clone(), original_sum);
+                                    }
+                                    break;
                                 }
-                            }
-                            Err(e) => {
-                                error!("Failed to post transaction: {:?}", e);
-                            }
-                        };
+                                Err(e) => {
+                                    error!("Failed to post transaction: {:?}", e);
+                                    if let Error::Limit = e {
+                                        info!("Sleeping for 30 seconds");
+                                        tokio::time::sleep(std::time::Duration::from_secs(30))
+                                            .await;
+                                        retries += 1;
+                                        info!("Retrying to post transaction")
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            };
+                        }
                     }
                 }
             }
