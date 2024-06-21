@@ -8,9 +8,9 @@ authors = ["Milan Stastny <milan@stastnej.ch>"]
 
 [dependencies]
 clap = "4.5"
-diesel = { version = "2.1", features = ["sqlite"] }
-diesel_migrations = "2.1"
-fiocz-rs = "0.2"
+diesel = { version = "2.2", features = ["sqlite"] }
+diesel_migrations = "2.2"
+fiocz-rs = "0.3"
 lettre = { version = "0.11", features = ["sendmail-transport", "file-transport"] }
 prettytable-rs = "0.10"
 rust_decimal = { version = "1" }

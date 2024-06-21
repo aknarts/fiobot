@@ -19,20 +19,11 @@ pub async fn check_accounts() {
 
         match fio.movements_since_last().await {
             Ok(statement) => {
+                if statement.account_statement.transaction_list.transaction.len() == 0 {
+                    info!("No transactions for account {}", account.name);
+                    continue;
+                }
                 let info = statement.account_statement.info;
-                // for transaction in statement.account_statement.transaction_list.transaction {
-                //     for (key, value) in transaction {
-                //         if key.to_ascii_lowercase() != "column1" {
-                //             continue;
-                //         }
-                //         if value.is_none() {
-                //         } else if let Some(data) = value {
-                //             if let TransactionDataEnum::Decimal(f) = data.value {
-                //                 sum += f;
-                //             }
-                //         }
-                //     }
-                // }
                 sum += info.closing_balance;
                 info!("Account info: {:?}", info.clone());
                 info!("Account {} has sum {}", account.name, sum);
@@ -45,10 +36,10 @@ pub async fn check_accounts() {
                             let amount = if rule.percent > 0 {
                                 (sum * rust_decimal::Decimal::from_i32(rule.amount).unwrap()
                                     / rust_decimal::Decimal::new(100, 0))
-                                .round_dp_with_strategy(
-                                    2,
-                                    rust_decimal::RoundingStrategy::ToNegativeInfinity,
-                                )
+                                    .round_dp_with_strategy(
+                                        2,
+                                        rust_decimal::RoundingStrategy::ToNegativeInfinity,
+                                    )
                             } else {
                                 rust_decimal::Decimal::from_i32(rule.amount)
                                     .unwrap()
